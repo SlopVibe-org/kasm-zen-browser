@@ -3,7 +3,15 @@ FROM kasmweb/debian-trixie-desktop:1.18.0
 USER root
 
 # Remove broken third-party repos from base image, then install dependencies
-RUN rm -f /etc/apt/sources.list.d/sublimetext.list \
+RUN find /etc/apt/sources.list.d/ -type f -not -name '*.debian*' -not -name '*debian*' -delete 2>/dev/null; \
+    rm -f /etc/apt/trusted.gpg.d/* 2>/dev/null; \
+    apt-get update -o Acquire::AllowInsecureRepositories=true \
+    -o Dir::Etc::sourcelist="/dev/null" \
+    -o Dir::Etc::sourceparts="/dev/null" \
+    && echo 'deb http://deb.debian.org/debian trixie main' > /etc/apt/sources.list \
+    && echo 'deb http://deb.debian.org/debian trixie-updates main' >> /etc/apt/sources.list \
+    && echo 'deb http://deb.debian.org/debian-security trixie-security main' >> /etc/apt/sources.list \
+    && rm -rf /etc/apt/sources.list.d/* \
     && apt-get update && \
     apt-get install -y --no-install-recommends \
         wget ca-certificates xz-utils \
