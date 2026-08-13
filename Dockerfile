@@ -2,17 +2,14 @@ FROM kasmweb/debian-trixie-desktop:1.18.0
 
 USER root
 
-# Remove broken third-party repos from base image, then install dependencies
-RUN find /etc/apt/sources.list.d/ -type f -not -name '*.debian*' -not -name '*debian*' -delete 2>/dev/null; \
-    rm -f /etc/apt/trusted.gpg.d/* 2>/dev/null; \
-    apt-get update -o Acquire::AllowInsecureRepositories=true \
-    -o Dir::Etc::sourcelist="/dev/null" \
-    -o Dir::Etc::sourceparts="/dev/null" \
-    && echo 'deb http://deb.debian.org/debian trixie main' > /etc/apt/sources.list \
-    && echo 'deb http://deb.debian.org/debian trixie-updates main' >> /etc/apt/sources.list \
-    && echo 'deb http://deb.debian.org/debian-security trixie-security main' >> /etc/apt/sources.list \
-    && rm -rf /etc/apt/sources.list.d/* \
-    && apt-get update && \
+# Fix broken third-party repos from base image (bad GPG keys)
+# Only remove the problematic ones, keep Debian keys intact
+RUN rm -f /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources 2>/dev/null; \
+    # Reset to clean Debian sources only
+    echo 'deb http://deb.debian.org/debian trixie main' > /etc/apt/sources.list && \
+    echo 'deb http://deb.debian.org/debian trixie-updates main' >> /etc/apt/sources.list && \
+    echo 'deb http://deb.debian.org/debian-security trixie-security main' >> /etc/apt/sources.list && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
         wget ca-certificates xz-utils \
         libdbus-glib-1-2 \
@@ -29,8 +26,7 @@ RUN find /etc/apt/sources.list.d/ -type f -not -name '*.debian*' -not -name '*de
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install Zen Browser from tarball
-ARG ZEN_ARCH=x86_64
-RUN wget -q "https://github.com/zen-browser/desktop/releases/latest/download/zen.linux-${ZEN_ARCH}.tar.xz" -O /tmp/zen.tar.xz && \
+RUN wget -q "https://github.com/zen-browser/desktop/releases/latest/download/zen.linux-x86_64.tar.xz" -O /tmp/zen.tar.xz && \
     mkdir -p /opt/zen && \
     tar xf /tmp/zen.tar.xz -C /opt/zen --strip-components=1 && \
     rm /tmp/zen.tar.xz && \
