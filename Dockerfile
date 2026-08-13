@@ -2,8 +2,9 @@ FROM kasmweb/debian-trixie-desktop:1.18.0
 
 USER root
 
-# Install dependencies
-RUN apt-get update && \
+# Remove broken third-party repos from base image, then install dependencies
+RUN rm -f /etc/apt/sources.list.d/sublimetext.list \
+    && apt-get update && \
     apt-get install -y --no-install-recommends \
         wget ca-certificates xz-utils \
         libdbus-glib-1-2 \
